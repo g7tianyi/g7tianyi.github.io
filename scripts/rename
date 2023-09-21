@@ -1,0 +1,28 @@
+#!/bin/bash
+# Created by g7tianyi on Sep 21, 2023
+
+set -e
+
+pushd $(dirname $0) > /dev/null
+SCRIPTPATH=$(pwd -P)
+popd > /dev/null
+SCRIPTFILE=$(basename $0)
+
+for FILE in $(ls $SCRIPTPATH/_posts); do
+  array=($(echo $FILE | tr "-" "\n"))
+  name=""
+  for (( index=0; index < ${#array[*]}; index++ ))
+  do
+    element="${array[index]}"
+    if [[ index -eq 0 ]]; then
+      name=${element}
+    else
+      name=${name}-${element}
+    fi
+    if [[ index -eq 2 ]]; then
+      BLOG_ID=$(date +'%Y-%m-%d %H:%M:%S' | md5 | cut -c 1-16)
+      name=${name}-${BLOG_ID}
+    fi
+  done
+  mv $SCRIPTPATH/_posts/$FILE $SCRIPTPATH/_posts/$name
+done

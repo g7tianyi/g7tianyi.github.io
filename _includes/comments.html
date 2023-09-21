@@ -1,0 +1,118 @@
+<script type="text/javascript">
+  var blogId = window.location.pathname.replace("/blog/", "").split('-')[0];
+
+  var saveDefault = function(key, value) {
+    if (window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  };
+
+  var getDefault = function(key) {
+    if (window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+    return null;
+  };
+
+  var recordAccess = function () {
+    $.ajax({
+      type: "POST",
+      data: JSON.stringify({
+        blogId: blogId,
+        createdBy: getDefault('nickname') || 'anonymous',
+      }),
+      contentType: "application/json;charset=utf-8",
+      dataType: "json",
+      url: "https://legolas.g7tianyi.com/v1/blogAccesses",
+    });
+  }
+
+  var loadComments = function() {
+    // TODO pagination
+    $.ajax({
+      type: "GET",
+      url: "https://legolas.g7tianyi.com/v1/blogComments?blogId=" + blogId,
+      success: function(data) {
+        $("#post-comments").empty();
+        renderComment(data);
+      },
+    });
+  };
+
+  var renderComment = function(comments) {
+    comments.forEach(function(comment) {
+      var createdBy = comment.createdBy || "anonymous";
+      var date = new Date(comment.createdAt);
+      var createdAt = date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+      var html =
+        "<div class=\"post-comment\">" +
+        "  <div class='post-comment-left'>" +
+        "    <div class=\"post-comment-avatar\">" + createdBy[0] + "</div>" +
+        "    <div class=\"post-comment-createdBy\">" + createdBy + "</div>" +
+        "  </div>" +
+        "  <div class='post-comment-right'>" +
+        "    <div class=\"post-comment-content\">" + comment.content + "</div>" +
+        "    <div class=\"post-comment-createdAt\">" + createdAt + "</div>" +
+        "  </div>" +
+        "</div>";
+      $("#post-comments").append(html);
+    });
+  };
+
+  var prepare = function() {
+    $("#post-comment").append(
+      "<div class=\"comments-blogId\"> <i class=\"fa fa-comment-o\" aria-hidden=\"true\"></i> Responses </div>" +
+      "<div class=\"create-comment\">" +
+      "  <input id=\"create-comment-created_by\" class=\"create-comment-inputs\" placeholder='Your name here' type=\"text\" name=\"created_by\">" +
+      "  <textarea id=\"create-comment-content\" class=\"create-comment-inputs\" placeholder='Your response..' name=\"content\" rows='4'></textarea>" +
+      "  <div class='right-wrapper'><span id=\"create-comment-button\"> 发布 </span></div>" +
+      "</div>" +
+      "<div class=\"post-comments\" id=\"post-comments\">" +
+      "</div>",
+    );
+
+    $("#create-comment-button").on("click", function() {
+      var content = $("#create-comment-content").val() || "";
+      content = content.trim();
+      if (!content) {
+        return;
+      }
+      if (content.length > 1024) {
+        content = content.substr(0, 1021) + "...";
+      }
+
+      var created_by = $("#create-comment-created_by").val() || "anonymous";
+      $.ajax({
+        type: "POST",
+        data: JSON.stringify({
+          blogId: blogId,
+          content: content,
+          createdBy: created_by,
+        }),
+        contentType: "application/json;charset=utf-8",
+        dataType: "json",
+        url: "https://legolas.g7tianyi.com/v1/blogComments",
+        success: function() {
+          loadComments();
+          saveDefault('nickname', created_by);
+          $("#create-comment-content").val('');
+        },
+      });
+    });
+  };
+
+  var setDefaults = function() {
+    var nickname = getDefault('nickname');
+    if (nickname) {
+      $('#create-comment-created_by').val(nickname);
+    }
+  };
+
+  $(document).ready(function() {
+    prepare();
+    setDefaults();
+    loadComments();
+    recordAccess();
+  });
+
+</script>

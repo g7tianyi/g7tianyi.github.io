@@ -1,0 +1,33 @@
+#!/bin/bash
+# Created by g7tianyi on Sep 21, 2023
+
+set -e
+
+pushd $(dirname $0) > /dev/null
+SCRIPTPATH=$(pwd -P)
+popd > /dev/null
+SCRIPTFILE=$(basename $0)
+
+DATE=$(date +'%Y-%m-%d')
+BLOG_ID=$(date +'%Y-%m-%d %H:%M:%S' | md5 | cut -c 1-16)
+POST_NAME="${DATE}-${BLOG_ID}"
+
+if [[ -n "$1" ]]; then
+  POST_NAME="${POST_NAME}-$1"
+fi
+
+POST_NAME=$(echo "${POST_NAME}.md" | tr -d '[:space:]')
+
+cat > ${SCRIPTPATH}/_posts/${POST_NAME} << EOF
+---
+layout: post
+title: 标题....
+categories: aaa
+tags:
+  - cc
+  - bb
+comments: true
+featured: false
+published: true
+---
+EOF
