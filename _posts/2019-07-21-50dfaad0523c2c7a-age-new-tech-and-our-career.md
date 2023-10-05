@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 年龄、新技术与我们的职业
-categories: tech
+categories: carrier
 tags:
   - career
 comments: true
